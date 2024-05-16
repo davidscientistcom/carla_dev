@@ -33,9 +33,11 @@ class Camera(object):
         self.camera.listen(lambda image: self.callback(image, self.camera_data))
 
     def render(self,window_name):
-        while True:
-            cv2.imshow(window_name, self.camera_data['image'])
+        static_image = cv2.imread('image1.jpg')
 
+        while True:
+            #cv2.imshow(window_name, self.camera_data['image'])
+            cv2.imshow(window_name, static_image)
             # Rompe el bucle si el usuario presiona 'q'
             if cv2.waitKey(1) == ord('q'):
                 break
