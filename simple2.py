@@ -32,26 +32,17 @@ spectator.set_transform(start_point)
 #send the car off on autopilot - this will leave the spectator
 vehicle.set_autopilot(True)
 
-def camera_callback(image, data_dict):
-    # Convertir datos de imagen en un array de NumPy
-    array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-    # Cambiar la forma del array y descartar el canal alpha
-    array = np.reshape(array, (image.height, image.width, 4))
-    array = array[:, :, :3]  # Solo tomamos los primeros tres canales
-    array = cv2.cvtColor(array, cv2.COLOR_RGBA2BGR)  # Convertir de RGBA a BGR
-    data_dict['image'] = array
-c1 = Camera(world,vehicle,"sensor.camera.rgb",1.6,0.9,camera_callback)
 
-c2 = Camera(world,vehicle,"sensor.camera.rgb",-5,-9,camera_callback)
+
+
+c1 = Camera(world,vehicle,"sensor.camera.rgb",1.6,0.9)
+c2 = Camera(world,vehicle,"sensor.camera.rgb",-5,-9)
 
 cm = CameraManager()
 cm.addCamera(c1)
 cm.addCamera(c2)
 cm.show()
 cm.join()
-
-
-
 
 len(spawn_points)
 
