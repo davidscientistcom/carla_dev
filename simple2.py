@@ -36,7 +36,7 @@ vehicle.set_autopilot(True)
 
 
 c1 = Camera(world,vehicle,"sensor.camera.rgb",1.6,0.9)
-c2 = Camera(world,vehicle,"sensor.camera.rgb",-5,-9)
+c2 = Camera(world,vehicle,"sensor.camera.rgb",-3,0.9, rotation_yaw=180)
 
 cm = CameraManager()
 cm.addCamera(c1)

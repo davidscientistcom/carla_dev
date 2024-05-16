@@ -4,7 +4,7 @@ import cv2
 from multiprocessing import Queue
 class Camera(object):
 
-    def __init__(self, world, vehicle, camera_type, pos_x, pos_z, image_queue,dim_x='640', dim_y='360'):
+    def __init__(self, world, vehicle, camera_type, pos_x, pos_z,rotation_yaw=0,dim_x='640', dim_y='360',image_queue=Queue()):
         self.world = world
         self.dim_x = dim_x
         self.dim_y = dim_y
@@ -13,14 +13,14 @@ class Camera(object):
         self.pos_z = pos_z
         self.image_queue = image_queue 
         self.camera_data = {'image': None}  
-
+        self.rotation_yaw = rotation_yaw
         
         camera_bp = self.world.get_blueprint_library().find(self.camera_type)
         camera_bp.set_attribute('image_size_x', self.dim_x)
         camera_bp.set_attribute('image_size_y', self.dim_y)
 
         
-        camera_init_trans = carla.Transform(carla.Location(z=self.pos_z, x=self.pos_x))
+        camera_init_trans = carla.Transform(carla.Location(z=self.pos_z, x=self.pos_x), carla.Rotation(yaw=self.rotation_yaw))
         
        
         self.camera = self.world.spawn_actor(camera_bp, camera_init_trans, attach_to=vehicle)
@@ -37,9 +37,6 @@ class Camera(object):
             if not self.image_queue.empty():  # Verificar si hay una imagen en la cola
                 self.camera_data['image'] = self.image_queue.get()  # Obtener la imagen de la cola
                 cv2.imshow(window_name, self.camera_data['image'])
-            else:
-                #print("La imagen está vacía")  # Impresión para depuración
-                pass
 
             # Rompe el bucle si el usuario presiona 'q'
             if cv2.waitKey(1) == ord('q'):
