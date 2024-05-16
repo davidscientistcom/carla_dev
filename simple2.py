@@ -37,10 +37,15 @@ vehicle.set_autopilot(True)
 
 c1 = Camera(world,vehicle,"sensor.camera.rgb",1.6,0.9)
 c2 = Camera(world,vehicle,"sensor.camera.rgb",-3,0.9, rotation_yaw=180)
-
+c3 = Camera(world, vehicle, "sensor.camera.rgb", 2, 0.9,rotation_yaw=-40)
+c4 = Camera(world, vehicle, "sensor.camera.rgb", 2, 0.9,rotation_yaw=40)  
 cm = CameraManager()
+
 cm.addCamera(c1)
 cm.addCamera(c2)
+cm.addCamera(c3)
+cm.addCamera(c4)
+
 cm.show()
 cm.join()
 
