@@ -46,7 +46,7 @@ cm.addCamera(c2)
 cm.addCamera(c3)
 cm.addCamera(c4)
 
-cm.show()
+cm.execute()
 cm.join()
 
 len(spawn_points)
