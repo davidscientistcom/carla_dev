@@ -1,9 +1,9 @@
-#all imports
-import carla #the sim library itself
-import random #to pick random spawn point
-import cv2 #to work with images from cameras
-import numpy as np #in this example to change image representation - re-shaping
-
+import carla 
+import numpy as np
+from Camera import Camera
+from CameraManager import CameraManager
+import cv2
+import random
 # connect to the sim
 client = carla.Client('localhost', 2000)
 client.set_timeout(60.0)
@@ -12,9 +12,26 @@ client.set_timeout(60.0)
 #client.set_timeout(15)
 client.load_world('Town04')
 
+
+
 #define environment/world and get possible places to spawn a car
 world = client.get_world()
 spawn_points = world.get_map().get_spawn_points()
+
+# Set up the simulator in synchronous mode
+settings = world.get_settings()
+settings.synchronous_mode = True # Enables synchronous mode
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+
+
+# Set up the TM in synchronous mode
+traffic_manager = client.get_trafficmanager()
+traffic_manager.set_synchronous_mode(True)
+
+# Set a seed so behaviour can be repeated if necessary
+traffic_manager.set_random_device_seed(0)
+random.seed(0)
 
 #look for a blueprint of Mini car
 vehicle_bp = world.get_blueprint_library().filter('*mini*')
@@ -32,52 +49,22 @@ spectator.set_transform(start_point)
 #send the car off on autopilot - this will leave the spectator
 vehicle.set_autopilot(True)
 
-#setting RGB Camera - this follow the approach explained in a Carla video
-# link: https://www.youtube.com/watch?v=om8klsBj4rc&t=1184s
-
-#camera mount offset on the car - you can tweak these to each car to avoid any parts of the car being in the view
-CAMERA_POS_Z = 1.6 #this means 1.6m up from the ground
-CAMERA_POS_X = 0.9 #this is 0.9m forward
-
-camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', '640') # this ratio works in CARLA 9.14 on Windows
-camera_bp.set_attribute('image_size_y', '360')
-
-camera_init_trans = carla.Transform(carla.Location(z=CAMERA_POS_Z,x=CAMERA_POS_X))
-#this creates the camera in the sim
-camera = world.spawn_actor(camera_bp,camera_init_trans,attach_to=vehicle)
 
 
-image_w = camera_bp.get_attribute('image_size_x').as_int()
-image_h = camera_bp.get_attribute('image_size_y').as_int()
 
-camera_data = {'image': np.zeros((image_h,image_w,4))}
-# this actually opens a live stream from the camera
-camera.listen(lambda image: camera_callback(image,camera_data))
+c1 = Camera(world,vehicle,"sensor.camera.rgb",1.6,0.9)
+c2 = Camera(world,vehicle,"sensor.camera.rgb",-3,0.9, rotation_yaw=180)
+c3 = Camera(world, vehicle, "sensor.camera.rgb", 2, 0.9,rotation_yaw=-40)
+c4 = Camera(world, vehicle, "sensor.camera.rgb", 2, 0.9,rotation_yaw=40)  
+cm = CameraManager()
 
-while True:
+cm.addCamera(c1)
+cm.addCamera(c2)
+cm.addCamera(c3)
+cm.addCamera(c4)
 
-    # Dispaly with imshow
-    cv2.imshow('All cameras', camera_data['image'])
-
-    # Break loop if user presses q
-    if cv2.waitKey(1) == ord('q'):
-        break
-
-cv2.destroyAllWindows()
-
-#grab a snapshot from the camera an show in a pop-up window
-img = camera_data['image']
-cv2.imshow('RGB Camera',img)
-cv2.waitKey(0)
-
-# clean up after yourself
-
-camera.stop() # this is the opposite of camera.listen
-for actor in world.get_actors().filter('*vehicle*'):
-    actor.destroy()
-for sensor in world.get_actors().filter('*sensor*'):
-    sensor.destroy()
+cm.execute()
+cm.join()
 
 len(spawn_points)
 
