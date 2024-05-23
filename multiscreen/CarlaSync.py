@@ -11,7 +11,7 @@ class CarlaSyncMode(object):
 
     """
 
-    def __init__(self, world, *sensors, **kwargs):
+    def __init__(self, world, sensors, **kwargs):
         self.world = world
         self.sensors = sensors
         self.frame = None
@@ -33,7 +33,7 @@ class CarlaSyncMode(object):
 
         make_queue(self.world.on_tick)
         for sensor in self.sensors:
-            make_queue(sensor.listen)
+            make_queue(sensor.camera.listen)
         return self
 
     def tick(self, timeout):

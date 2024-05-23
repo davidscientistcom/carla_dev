@@ -26,7 +26,6 @@ def should_quit():
 def main():
     actor_list = []
     pygame.init()
-    ms = MultiScreenCamera()
     clock = pygame.time.Clock()
 
     client = carla.Client('localhost', 2000)
@@ -41,45 +40,31 @@ def main():
 
         blueprint_library = world.get_blueprint_library()
 
-        vehicle = world.spawn_actor(
-            random.choice(blueprint_library.filter('vehicle.*')),
+        vehicle = world.spawn_actor( world.get_blueprint_library().filter('vehicle.dodge.charger_police_2020')[0],
             start_pose)
         actor_list.append(vehicle)
         vehicle.set_simulate_physics(False)
 
-        camera_rgb = world.spawn_actor(
-            blueprint_library.find('sensor.camera.rgb'),
-            carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)),
-            attach_to=vehicle)
-        actor_list.append(camera_rgb)
+        ms = MultiScreenCamera(world=world,vehicle=vehicle)
 
-        camera_semseg = world.spawn_actor(
-            blueprint_library.find('sensor.camera.semantic_segmentation'),
-            carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)),
-            attach_to=vehicle)
-        actor_list.append(camera_semseg)
+        
 
         # Create a synchronous mode context.
-        with CarlaSyncMode(world, camera_rgb, camera_semseg, fps=30) as sync_mode:
+        with CarlaSyncMode(world, ms.cameras, fps=30) as sync_mode:
             while True:
                 if should_quit():
                     return
                 clock.tick()
 
                 # Advance the simulation and wait for the data.
-                snapshot, image_rgb, image_semseg = sync_mode.tick(timeout=2.0)
+                ms.data = sync_mode.tick(timeout=2.0)
 
                 # Choose the next waypoint and update the car location.
                 waypoint = random.choice(waypoint.next(1.5))
                 vehicle.set_transform(waypoint.transform)
 
-                image_semseg.convert(carla.ColorConverter.CityScapesPalette)
-                fps = round(1.0 / snapshot.timestamp.delta_seconds)
+                ms.draw()
 
-
-                # Draw the display.
-                ms.draw_image(image_rgb,1)
-                ms.draw_image(image_semseg,2)
                 pygame.display.flip()
 
     finally:
